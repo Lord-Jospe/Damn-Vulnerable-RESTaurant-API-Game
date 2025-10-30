@@ -3,7 +3,7 @@ from typing import Union
 from apis.auth.utils import get_current_user, get_user_by_username
 from db.models import User
 from db.session import get_db
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing_extensions import Annotated
@@ -25,13 +25,23 @@ def update_profile(
     db: Session = Depends(get_db),
 ):
     db_user = get_user_by_username(db, user.username)
-
-    for var, value in user.dict().items():
+    if db_user.username != current_user.username:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Usuario no permitido para actualizar"
+        )
+    
+    else:
+      for var, value in user.dict().items():
         if value:
             setattr(db_user, var, value)
 
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-
+      db.add(db_user)
+      db.commit()
+      db.refresh(db_user)
+    
     return db_user
+
+
+  
+  
