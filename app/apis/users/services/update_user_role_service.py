@@ -16,6 +16,14 @@ async def update_user_role(
     db: Session = Depends(get_db),
 ):
     # this method allows staff to give Employee role to other users
+    
+    if current_user.role == models.UserRole.CUSTOMER.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Los clientes no pueden agregar roles",
+        )
+
+
     # Chef role is restricted
     if user.role == models.UserRole.CHEF.value:
         raise HTTPException(
