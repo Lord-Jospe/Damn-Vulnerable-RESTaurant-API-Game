@@ -1,12 +1,27 @@
 import base64
-
 import requests
 from apis.menu import schemas
 from db.models import MenuItem
 from fastapi import HTTPException
+from urllib.parse import urlparse
 
+extensionesImaPermitida:(".jpg",".png",".webp," ".jpeg" )
+dominiosPermitidos:("storage.googleapis.com","usercontent.google.com")
+
+def safe_url (image_url: str):
+    url = urlparse(image_url)
+
+    if url.scheme not in ("http", "https"):
+        raise ValueError("Url no permitida, debe de ser http o https")
+    if url.hostname not in dominiosPermitidos:
+        raise ValueError("imagenes sacadas de dominios no permitidos")
+    if url.path.lower().endswith(extensionesImaPermitida):
+        raise ValueError("formato de imagen no permitda")
+
+    return image_url
 
 def _image_url_to_base64(image_url: str):
+    safe_url(image_url)
     response = requests.get(image_url, stream=True)
     encoded_image = base64.b64encode(response.content).decode()
 
